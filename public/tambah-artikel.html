@@ -25,7 +25,7 @@
                     </div>
                     <div class="form-group">
                         <label for="slug">Slug:</label>
-                        <input type="text" name="slug" id="slug" required>
+                        <input type="text" name="slug" id="slug" required readonly style="background:#f5f5f5; color:#888; cursor:not-allowed;">
                     </div>
                 </div>
                 <div class="form-row">
@@ -41,7 +41,8 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="kategori">Kategori:</label>
-                        <input type="text" name="kategori" id="kategori" required>
+                        <input list="kategori-list" name="kategori" id="kategori" required autocomplete="off">
+                        <datalist id="kategori-list"></datalist>
                     </div>
                     <div class="form-group">
                         <label for="status">Status:</label>
@@ -54,7 +55,10 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="tags">Tags:</label>
-                        <input type="text" name="tags" id="tags">
+                        <div id="tags-input-container" class="tags-input-container">
+                            <input type="text" id="tags-input" placeholder="Tekan Enter untuk tambah tag">
+                        </div>
+                        <input type="hidden" name="tags" id="tags">
                     </div>
                     <div class="form-group">
                         <label for="meta_title">Meta Title:</label>
@@ -78,7 +82,22 @@
                 </div>
                 <div class="form-group">
                     <label for="isi_artikel">Isi Artikel:</label>
-                    <textarea name="isi_artikel" id="isi_artikel" rows="6" required></textarea>
+                    <div class="editor-toolbar">
+                        <button type="button" class="toolbar-btn" data-format="bold" title="Bold"><b>B</b></button>
+                        <button type="button" class="toolbar-btn" data-format="italic" title="Italic"><i>I</i></button>
+                        <button type="button" class="toolbar-btn" data-format="underline" title="Underline"><u>U</u></button>
+                        <span class="separator">|</span>
+                        <button type="button" class="toolbar-btn" data-format="link" title="Link">🔗</button>
+                        <span class="separator">|</span>
+                        <button type="button" class="toolbar-btn" data-format="h2" title="Heading 2">H2</button>
+                        <button type="button" class="toolbar-btn" data-format="h3" title="Heading 3">H3</button>
+                        <span class="separator">|</span>
+                        <button type="button" class="toolbar-btn" data-format="paragraph" title="Paragraph">¶</button>
+                        <button type="button" class="toolbar-btn" data-format="bullet" title="Bullet List">• List</button>
+                        <button type="button" class="toolbar-btn" data-format="number" title="Numbered List">1. List</button>
+                    </div>
+                    <div id="visual-editor" class="visual-editor" contenteditable="true" data-placeholder="Mulai menulis artikel..."></div>
+                    <textarea name="isi_artikel" id="isi_artikel" style="display: none;" required></textarea>
                 </div>
                 <button type="submit" class="btn-tambah">Simpan Artikel</button>
             </form>
@@ -87,6 +106,174 @@
     </div>
     <script src="js/tambah-artikel.js"></script>
     <script>
+        // Rich text editor functionality
+        const visualEditor = document.getElementById('visual-editor');
+        const hiddenTextarea = document.getElementById('isi_artikel');
+        const toolbarBtns = document.querySelectorAll('.toolbar-btn');
+
+        toolbarBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const format = this.getAttribute('data-format');
+
+                switch(format) {
+                    case 'bold':
+                        document.execCommand('bold', false, null);
+                        break;
+                    case 'italic':
+                        document.execCommand('italic', false, null);
+                        break;
+                    case 'underline':
+                        document.execCommand('underline', false, null);
+                        break;
+                    case 'link':
+                        const url = prompt('Masukkan URL:', 'https://');
+                        if (url) {
+                            document.execCommand('createLink', false, url);
+                        }
+                        break;
+                    case 'h2':
+                        document.execCommand('formatBlock', false, 'h2');
+                        break;
+                    case 'h3':
+                        document.execCommand('formatBlock', false, 'h3');
+                        break;
+                    case 'paragraph':
+                        document.execCommand('formatBlock', false, 'p');
+                        break;
+                    case 'bullet':
+                        document.execCommand('insertUnorderedList', false, null);
+                        break;
+                    case 'number':
+                        document.execCommand('insertOrderedList', false, null);
+                        break;
+                }
+                visualEditor.focus();
+                convertToJSON();
+            });
+        });
+
+        // Convert visual HTML to JSON format
+        function convertToJSON() {
+            const konten = [];
+            const children = visualEditor.childNodes;
+
+            children.forEach(node => {
+                if (node.nodeType === 3) {
+                    // Text node - wrap in paragraph if has content
+                    const text = node.textContent.trim();
+                    if (text) {
+                        konten.push({
+                            "tipe": "paragraf",
+                            "isi": text
+                        });
+                    }
+                } else if (node.nodeType === 1) {
+                    const tagName = node.tagName.toLowerCase();
+                    
+                    if (tagName === 'h2') {
+                        konten.push({
+                            "tipe": "heading",
+                            "level": 2,
+                            "isi": processInlineFormats(node.innerHTML)
+                        });
+                    } else if (tagName === 'h3') {
+                        konten.push({
+                            "tipe": "heading",
+                            "level": 3,
+                            "isi": processInlineFormats(node.innerHTML)
+                        });
+                    } else if (tagName === 'p' || tagName === 'div') {
+                        const text = processInlineFormats(node.innerHTML);
+                        if (text.trim()) {
+                            konten.push({
+                                "tipe": "paragraf",
+                                "isi": text
+                            });
+                        }
+                    } else if (tagName === 'ul') {
+                        const items = Array.from(node.querySelectorAll('li')).map(li => 
+                            processInlineFormats(li.innerHTML)
+                        ).filter(item => item.trim());
+                        if (items.length > 0) {
+                            konten.push({
+                                "tipe": "list",
+                                "format": "bullet",
+                                "items": items
+                            });
+                        }
+                    } else if (tagName === 'ol') {
+                        const items = Array.from(node.querySelectorAll('li')).map(li => 
+                            processInlineFormats(li.innerHTML)
+                        ).filter(item => item.trim());
+                        if (items.length > 0) {
+                            konten.push({
+                                "tipe": "list",
+                                "format": "numbering",
+                                "items": items
+                            });
+                        }
+                    } else if (tagName !== 'br') {
+                        // Handle other tags as paragraphs
+                        const text = processInlineFormats(node.innerHTML || node.textContent);
+                        if (text.trim()) {
+                            konten.push({
+                                "tipe": "paragraf",
+                                "isi": text
+                            });
+                        }
+                    }
+                }
+            });
+
+            const jsonOutput = { "konten": konten };
+            hiddenTextarea.value = JSON.stringify(jsonOutput);
+        }
+
+        function processInlineFormats(html) {
+            let text = html;
+            
+            // Remove <br> tags first
+            text = text.replace(/<br\s*\/?>/gi, ' ');
+            
+            // Convert HTML bold tags to custom tags (non-greedy)
+            text = text.replace(/<b\b[^>]*>(.*?)<\/b>/gis, '<bold>$1</bold>');
+            text = text.replace(/<strong\b[^>]*>(.*?)<\/strong>/gis, '<bold>$1</bold>');
+            
+            // Convert HTML italic tags to custom tags (non-greedy)
+            text = text.replace(/<i\b[^>]*>(.*?)<\/i>/gis, '<italic>$1</italic>');
+            text = text.replace(/<em\b[^>]*>(.*?)<\/em>/gis, '<italic>$1</italic>');
+            
+            // Convert HTML underline tags to custom tags (non-greedy)
+            text = text.replace(/<u\b[^>]*>(.*?)<\/u>/gis, '<underline>$1</underline>');
+            
+            // Convert HTML links to custom tags
+            text = text.replace(/<a\s+[^>]*href=["']([^"']*)["'][^>]*>(.*?)<\/a>/gis, "<link href='$1'>$2</link>");
+            
+            // Remove span tags but keep content
+            text = text.replace(/<\/?span[^>]*>/gi, '');
+            
+            // Remove any remaining HTML tags except our custom ones
+            text = text.replace(/<(?!\/?(?:bold|italic|underline|link)(?:\s|>))[^>]+>/gi, '');
+            
+            // Clean up excessive whitespace
+            text = text.replace(/\s+/g, ' ').trim();
+            
+            return text;
+        }
+
+        // Update JSON when content changes
+        visualEditor.addEventListener('input', convertToJSON);
+        visualEditor.addEventListener('blur', convertToJSON);
+
+        // Debug: Log JSON saat form submit
+        document.getElementById('form-artikel').addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('JSON Output:', hiddenTextarea.value);
+            console.log('Parsed:', JSON.parse(hiddenTextarea.value));
+            // Submit form setelah validasi
+            // this.submit();
+        });
+
         // Auto generate slug dari judul
         document.getElementById('judul').addEventListener('input', function() {
             const slug = this.value
@@ -96,6 +283,80 @@
                 .replace(/-+/g, '-');         // hapus duplikat -
             document.getElementById('slug').value = slug;
         });
+
+        // TAGS INPUT ENTER HANDLER
+        const tagsInput = document.getElementById('tags-input');
+        const tagsHidden = document.getElementById('tags');
+        const tagsContainer = document.getElementById('tags-input-container');
+        let tagsArr = [];
+
+        function renderTags() {
+            // Hapus semua tag badge sebelum render ulang
+            tagsContainer.querySelectorAll('.tag-badge').forEach(el => el.remove());
+            tagsArr.forEach((tag, idx) => {
+                const span = document.createElement('span');
+                span.className = 'tag-badge';
+                span.textContent = tag;
+                // Tombol hapus tag
+                const close = document.createElement('span');
+                close.className = 'tag-remove';
+                close.textContent = '×';
+                close.onclick = () => {
+                    tagsArr.splice(idx, 1);
+                    renderTags();
+                };
+                span.appendChild(close);
+                tagsContainer.insertBefore(span, tagsInput);
+            });
+            tagsHidden.value = tagsArr.join(',');
+        }
+
+        tagsInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && this.value.trim() !== '') {
+                e.preventDefault();
+                const val = this.value.trim();
+                if (val && !tagsArr.includes(val)) {
+                    tagsArr.push(val);
+                    renderTags();
+                }
+                this.value = '';
+            } else if (e.key === 'Backspace' && this.value === '' && tagsArr.length > 0) {
+                // Hapus tag terakhir jika input kosong dan tekan backspace
+                tagsArr.pop();
+                renderTags();
+            }
+        });
+
+        // KATEGORI AUTOCOMPLETE DARI DATA ARTIKEL
+        const kategoriInput = document.getElementById('kategori');
+        const kategoriList = document.getElementById('kategori-list');
+        async function fetchKategoriFromArtikel() {
+            try {
+                const res = await fetch('/api/artikel');
+                const data = await res.json();
+                // Ambil semua kategori unik dari artikel
+                const kategoriSet = new Set();
+                data.forEach(artikel => {
+                    if (artikel.kategori && artikel.kategori.trim()) {
+                        kategoriSet.add(artikel.kategori.trim());
+                    }
+                });
+                kategoriList.innerHTML = '';
+                Array.from(kategoriSet).sort().forEach(kat => {
+                    const opt = document.createElement('option');
+                    opt.value = kat;
+                    kategoriList.appendChild(opt);
+                });
+            } catch (e) {
+                // fallback jika gagal fetch
+                kategoriList.innerHTML = `
+                    <option value="Bisnis"></option>
+                    <option value="Teknologi"></option>
+                    <option value="Pendidikan"></option>
+                `;
+            }
+        }
+        fetchKategoriFromArtikel();
     </script>
 </body>
 </html>

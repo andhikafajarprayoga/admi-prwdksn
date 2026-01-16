@@ -6,14 +6,18 @@
     <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
+    <a href="/logout" class="logout-btn logout-btn-top">Logout</a>
     <div class="dashboard-container">
         <aside class="sidebar">
-            <h2>Menu</h2>
-            <ul>
-                <li class="active"><a href="#" id="menu-artikel">Artikel</a></li>
+            <div class="sidebar-header">
+                <div class="sidebar-logo">📝</div>
+                <h2>Admin Menu</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active"><a href="#" id="menu-artikel"><span>📄</span> Artikel</a></li>
                 <!-- Menu lain bisa ditambah di sini -->
+                <!-- <li><a href="#"><span>📊</span> Statistik</a></li> -->
             </ul>
-            <a href="/logout" class="logout-btn">Logout</a>
         </aside>
         <main class="main-content">
             <h2>Daftar Artikel</h2>
