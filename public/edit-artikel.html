@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Artikel</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="tambah-artikel.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">📝</div>
+                <h2>Admin Menu</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="dashboard.html"><span>📄</span> Artikel</a></li>
+            </ul>
+        </aside>
+        <main class="main-content">
+            <h2>Edit Artikel</h2>
+            <form id="form-artikel" class="form-artikel" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="judul">Judul:</label>
+                        <input type="text" name="judul" id="judul" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="slug">Slug:</label>
+                        <input type="text" name="slug" id="slug" required readonly style="background:#f5f5f5; color:#888; cursor:not-allowed;">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tanggal">Tanggal:</label>
+                        <input type="date" name="tanggal" id="tanggal" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="penulis">Penulis:</label>
+                        <input type="text" name="penulis" id="penulis" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="kategori">Kategori:</label>
+                        <input list="kategori-list" name="kategori" id="kategori" required autocomplete="off">
+                        <datalist id="kategori-list"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status:</label>
+                        <select name="status" id="status" required>
+                            <option value="publish">Publish</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tags">Tags:</label>
+                        <div id="tags-input-container" class="tags-input-container">
+                            <input type="text" id="tags-input" placeholder="Tekan Enter untuk tambah tag">
+                        </div>
+                        <input type="hidden" name="tags" id="tags">
+                    </div>
+                    <div class="form-group">
+                        <label for="meta_title">Meta Title:</label>
+                        <input type="text" name="meta_title" id="meta_title">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="meta_description">Meta Description:</label>
+                        <input type="text" name="meta_description" id="meta_description">
+                    </div>
+                    <div class="form-group">
+                        <label for="meta_keywords">Meta Keywords:</label>
+                        <input type="text" name="meta_keywords" id="meta_keywords">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="foto">Foto (upload, bisa lebih dari satu):</label>
+                    <div id="foto-preview-container"></div>
+                    <input type="file" name="foto" id="foto" multiple accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label for="isi_artikel">Isi Artikel:</label>
+                    <div class="editor-toolbar">
+                        <button type="button" class="toolbar-btn" data-format="bold" title="Bold"><b>B</b></button>
+                        <button type="button" class="toolbar-btn" data-format="italic" title="Italic"><i>I</i></button>
+                        <button type="button" class="toolbar-btn" data-format="underline" title="Underline"><u>U</u></button>
+                        <span class="separator">|</span>
+                        <button type="button" class="toolbar-btn" data-format="link" title="Link">🔗</button>
+                        <span class="separator">|</span>
+                        <button type="button" class="toolbar-btn" data-format="h2" title="Heading 2">H2</button>
+                        <button type="button" class="toolbar-btn" data-format="h3" title="Heading 3">H3</button>
+                        <span class="separator">|</span>
+                        <button type="button" class="toolbar-btn" data-format="paragraph" title="Paragraph">¶</button>
+                        <button type="button" class="toolbar-btn" data-format="bullet" title="Bullet List">• List</button>
+                        <button type="button" class="toolbar-btn" data-format="number" title="Numbered List">1. List</button>
+                    </div>
+                    <div id="visual-editor" class="visual-editor" contenteditable="true" data-placeholder="Mulai menulis artikel..."></div>
+                    <textarea name="isi_artikel" id="isi_artikel" style="display: none;" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="highlight">Highlight:</label>
+                        <select name="highlight" id="highlight" required>
+                            <option value="0">Tidak</option>
+                            <option value="1">Ya</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-tambah">Simpan Perubahan</button>
+            </form>
+            <div id="notif"></div>
+        </main>
+    </div>
+    <script src="js/edit-artikel-utils.js"></script>
+    <script src="js/edit-artikel-main.js"></script>
+</body>
+</html>

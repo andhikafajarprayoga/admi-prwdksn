@@ -23,15 +23,22 @@ function showDeleteArtikelModal(id, onSuccess) {
     `;
     document.body.appendChild(modal);
 
+    // Tidak langsung hapus, tunggu klik tombol "Hapus"
     modal.querySelector('.btn-modal-cancel').onclick = () => modal.remove();
     modal.querySelector('.modal-overlay').onclick = () => modal.remove();
     modal.querySelector('.btn-modal-delete').onclick = async () => {
-        modal.remove();
+        // Tampilkan loading pada tombol hapus
+        const btn = modal.querySelector('.btn-modal-delete');
+        btn.disabled = true;
+        btn.textContent = 'Menghapus...';
         try {
-            const res = await fetch(`/api/artikel/${id}`, { method: 'DELETE' });
+            const res = await fetch(`https://purwadaksina.space/api/artikel/${id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Gagal hapus');
+            modal.remove();
             if (typeof onSuccess === 'function') onSuccess();
         } catch (err) {
+            btn.disabled = false;
+            btn.textContent = 'Hapus';
             alert('Gagal menghapus artikel!');
         }
     };

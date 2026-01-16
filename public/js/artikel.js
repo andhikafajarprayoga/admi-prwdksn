@@ -118,45 +118,10 @@ async function tampilkanArtikel(selector = '#artikel-list', page = 1) {
         };
     });
 
-    // Tambahkan modal konfirmasi hapus
-function showDeleteModal(id, onConfirm) {
-    // Hapus modal lama jika ada
-    const oldModal = document.getElementById('modal-delete-artikel');
-    if (oldModal) oldModal.remove();
-
-    const modal = document.createElement('div');
-    modal.id = 'modal-delete-artikel';
-    modal.innerHTML = `
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <h3>Konfirmasi Hapus</h3>
-            <p>Yakin ingin menghapus artikel ini?<br><small>ID: <b>${id}</b></small></p>
-            <div class="modal-actions">
-                <button class="btn-modal-cancel">Batal</button>
-                <button class="btn-modal-delete">Hapus</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    modal.querySelector('.btn-modal-cancel').onclick = () => modal.remove();
-    modal.querySelector('.modal-overlay').onclick = () => modal.remove();
-    modal.querySelector('.btn-modal-delete').onclick = async () => {
-        modal.remove();
-        try {
-            await fetch(`https://purwadaksina.space/api/artikel/${id}`, { method: 'DELETE' });
-            alert('Artikel berhasil dihapus!');
-            tampilkanArtikel();
-        } catch (err) {
-            alert('Gagal menghapus artikel!');
-        }
-    };
-}
-
     container.querySelectorAll('.btn-delete').forEach(btn => {
         btn.onclick = function() {
             const id = this.getAttribute('data-id');
-            showDeleteModal(id);
+            showDeleteArtikelModal(id, () => tampilkanArtikel(selector, page));
         };
     });
 
