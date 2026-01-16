@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Tambah Artikel</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="tambah-artikel.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <h2>Menu</h2>
+            <ul>
+                <li><a href="dashboard.html">Dashboard</a></li>
+            </ul>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </aside>
+        <main class="main-content">
+            <h2>Tambah Artikel</h2>
+            <form id="form-artikel" class="form-artikel" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="judul">Judul:</label>
+                        <input type="text" name="judul" id="judul" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="slug">Slug:</label>
+                        <input type="text" name="slug" id="slug" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tanggal">Tanggal:</label>
+                        <input type="date" name="tanggal" id="tanggal" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="penulis">Penulis:</label>
+                        <input type="text" name="penulis" id="penulis" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="kategori">Kategori:</label>
+                        <input type="text" name="kategori" id="kategori" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status:</label>
+                        <select name="status" id="status" required>
+                            <option value="publish">Publish</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tags">Tags:</label>
+                        <input type="text" name="tags" id="tags">
+                    </div>
+                    <div class="form-group">
+                        <label for="meta_title">Meta Title:</label>
+                        <input type="text" name="meta_title" id="meta_title">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="meta_description">Meta Description:</label>
+                        <input type="text" name="meta_description" id="meta_description">
+                    </div>
+                    <div class="form-group">
+                        <label for="meta_keywords">Meta Keywords:</label>
+                        <input type="text" name="meta_keywords" id="meta_keywords">
+                    </div>
+                </div>
+                <!-- Foto dan Isi Artikel di bawah -->
+                <div class="form-group">
+                    <label for="foto">Foto (upload, bisa lebih dari satu):</label>
+                    <input type="file" name="foto" id="foto" multiple accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label for="isi_artikel">Isi Artikel:</label>
+                    <textarea name="isi_artikel" id="isi_artikel" rows="6" required></textarea>
+                </div>
+                <button type="submit" class="btn-tambah">Simpan Artikel</button>
+            </form>
+            <div id="notif"></div>
+        </main>
+    </div>
+    <script src="js/tambah-artikel.js"></script>
+    <script>
+        // Auto generate slug dari judul
+        document.getElementById('judul').addEventListener('input', function() {
+            const slug = this.value
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '') // hapus karakter spesial
+                .replace(/\s+/g, '-')         // ganti spasi dengan -
+                .replace(/-+/g, '-');         // hapus duplikat -
+            document.getElementById('slug').value = slug;
+        });
+    </script>
+</body>
+</html>

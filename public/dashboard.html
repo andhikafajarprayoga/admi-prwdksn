@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Admin</title>
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <h2>Menu</h2>
+            <ul>
+                <li class="active"><a href="#" id="menu-artikel">Artikel</a></li>
+                <!-- Menu lain bisa ditambah di sini -->
+            </ul>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </aside>
+        <main class="main-content">
+            <h2>Daftar Artikel</h2>
+            <button id="btn-tambah-artikel" class="btn-tambah">+ Tambah Artikel</button>
+            <div id="artikel-list"></div>
+        </main>
+    </div>
+    <script src="js/artikel.js"></script>
+    <script>
+        document.getElementById('menu-artikel').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelector('.main-content h2').textContent = 'Daftar Artikel';
+            tampilkanArtikel();
+        });
+        document.getElementById('btn-tambah-artikel').addEventListener('click', function() {
+            window.location.href = 'tambah-artikel.html';
+        });
+        tampilkanArtikel();
+    </script>
+</body>
+</html>
