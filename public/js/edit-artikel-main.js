@@ -77,42 +77,48 @@ function fillFormWithData(artikel) {
         updateHiddenTextarea();
     }
 
-    // Foto lama - perbaikan parsing untuk 2 kemungkinan format
+    // Foto lama - BERSIHKAN DARI AWAL
     fotoArr = [];
     if (artikel.foto) {
         if (Array.isArray(artikel.foto)) {
-            fotoArr = artikel.foto;
-            console.log('Foto is array:', fotoArr);
+            // Bersihkan setiap URL foto dari duplikasi domain
+            fotoArr = artikel.foto.map(cleanFotoUrl);
+            window.lastBackendFotoArr = fotoArr.slice();
+            console.log('Foto is array (cleaned):', fotoArr);
         } else if (typeof artikel.foto === 'string') {
             const fotoStr = artikel.foto.trim();
             console.log('Foto string trimmed:', fotoStr);
             
-            // Deteksi string yang dimulai dengan [ dan diakhiri dengan ]
             if (fotoStr.startsWith('[') && fotoStr.endsWith(']')) {
                 try {
                     const parsed = JSON.parse(fotoStr);
                     console.log('Parsed JSON:', parsed);
                     if (Array.isArray(parsed)) {
-                        fotoArr = parsed;
-                        console.log('Successfully parsed as array:', fotoArr);
+                        // Bersihkan setiap URL foto
+                        fotoArr = parsed.map(cleanFotoUrl);
+                        window.lastBackendFotoArr = fotoArr.slice();
+                        console.log('Successfully parsed as array (cleaned):', fotoArr);
                     } else {
-                        fotoArr = [artikel.foto];
-                        console.log('Parsed but not array, using original:', fotoArr);
+                        fotoArr = [cleanFotoUrl(artikel.foto)];
+                        window.lastBackendFotoArr = fotoArr.slice();
+                        console.log('Parsed but not array, using original (cleaned):', fotoArr);
                     }
                 } catch (error) {
                     console.error('JSON parse error:', error);
-                    fotoArr = [artikel.foto];
+                    fotoArr = [cleanFotoUrl(artikel.foto)];
+                    window.lastBackendFotoArr = fotoArr.slice();
                 }
             } else {
-                // String biasa, bukan JSON array
                 if (fotoStr) {
-                    fotoArr = [artikel.foto];
-                    console.log('Plain string, wrapped in array:', fotoArr);
+                    fotoArr = [cleanFotoUrl(artikel.foto)];
+                    window.lastBackendFotoArr = fotoArr.slice();
+                    console.log('Plain string, wrapped in array (cleaned):', fotoArr);
                 }
             }
         }
     }
     
+    // RESET fotoToDelete
     fotoToDelete = [];
     
     console.log('Final fotoArr before renderFotoPreview:', fotoArr);
@@ -175,6 +181,7 @@ function renderTags() {
 // Render foto preview dan hapus
 function renderFotoPreview() {
     console.log('renderFotoPreview called with fotoArr:', fotoArr);
+    console.log('fotoToDelete current state:', fotoToDelete);
     
     const container = document.getElementById('foto-preview-container');
     if (!container) {
@@ -201,30 +208,15 @@ function renderFotoPreview() {
 
         const img = document.createElement('img');
         
-        // Perbaikan URL gambar untuk 2 kemungkinan format
+        // Untuk display, tambahkan domain hanya jika belum ada
         let imageUrl = '';
         if (typeof foto === 'string') {
-            let cleanFoto = foto.trim();
-
-            // --- PATCH: Remove double domain if exists ---
-            // If contains '/uploads/http', extract after the last '/uploads/'
-            const uploadsDoubleDomain = cleanFoto.match(/\/uploads\/https?:\/\/.+\/uploads\/(.+)/);
-            if (uploadsDoubleDomain) {
-                cleanFoto = uploadsDoubleDomain[1];
-            }
-
-            // If contains two 'http', extract the last one
-            const doubleHttp = cleanFoto.match(/(https?:\/\/[^\s]+)$/);
-            if ((cleanFoto.match(/https?:\/\//g) || []).length > 1 && doubleHttp) {
-                cleanFoto = doubleHttp[1];
-            }
-
-            // Normal URL logic
-            if (cleanFoto.includes('http://') || cleanFoto.includes('https://')) {
+            const cleanFoto = foto.trim();
+            
+            if (cleanFoto.startsWith('http://') || cleanFoto.startsWith('https://')) {
                 imageUrl = cleanFoto;
-            } else if (cleanFoto.startsWith('/uploads/')) {
-                imageUrl = `https://purwadaksina.space${cleanFoto}`;
             } else {
+                // Hanya nama file, tambahkan domain
                 imageUrl = `https://purwadaksina.space/uploads/${cleanFoto}`;
             }
         } else {
@@ -239,7 +231,6 @@ function renderFotoPreview() {
         img.style.border = '1px solid #ddd';
         img.style.objectFit = 'cover';
         
-        // Event handlers
         img.onload = function() {
             console.log(`Image loaded successfully: ${imageUrl}`);
         };
@@ -256,9 +247,10 @@ function renderFotoPreview() {
         delBtn.title = 'Hapus foto ini';
         delBtn.className = 'foto-delete-btn';
         delBtn.onclick = () => {
-            console.log(`Deleting photo: ${foto}`);
-            fotoToDelete.push(foto);
-            fotoArr.splice(idx, 1);
+            if (!fotoToDelete.includes(foto)) {
+                fotoToDelete.push(foto); // Foto yang akan dihapus
+            }
+            fotoArr = fotoArr.filter(f => f !== foto); // Hapus dari tampilan
             renderFotoPreview();
         };
 
@@ -270,6 +262,27 @@ function renderFotoPreview() {
     });
     
     console.log('All photos rendered');
+}
+
+// Helper untuk membersihkan foto URL yang berlipat ganda
+function cleanFotoUrl(foto) {
+    if (typeof foto !== 'string') return foto;
+    
+    let cleanFoto = foto.trim();
+    
+    // Ekstrak nama file dari URL yang berlipat ganda
+    const fileNameMatch = cleanFoto.match(/([^\/]+\.(?:jpg|jpeg|png|gif|webp))$/i);
+    if (fileNameMatch) {
+        return fileNameMatch[1]; // Hanya nama file
+    }
+    
+    // Fallback: coba ekstrak dari pattern /uploads/ terakhir
+    const uploadsMatch = cleanFoto.match(/\/uploads\/([^\/]+)$/);
+    if (uploadsMatch) {
+        return uploadsMatch[1];
+    }
+    
+    return cleanFoto;
 }
 
 // Load kategori dari API
@@ -303,6 +316,12 @@ form.onsubmit = async function(e) {
     notif.textContent = '';
     notif.style.color = '';
 
+    showLoading();
+
+    console.log('=== FORM SUBMIT DEBUG ===');
+    console.log('fotoArr before submit:', fotoArr);
+    console.log('fotoToDelete before submit:', fotoToDelete);
+
     const formData = new FormData();
     formData.append('judul', document.getElementById('judul').value);
     formData.append('slug', document.getElementById('slug').value);
@@ -314,36 +333,69 @@ form.onsubmit = async function(e) {
     formData.append('meta_title', document.getElementById('meta_title').value);
     formData.append('meta_description', document.getElementById('meta_description').value);
     formData.append('meta_keywords', document.getElementById('meta_keywords').value);
-    // Tambah: highlight
     if (document.getElementById('highlight')) {
         formData.append('highlight', document.getElementById('highlight').value);
     }
 
-    // Kirim foto lama yang masih ada
-    fotoArr.forEach(f => formData.append('fotoLama[]', f));
-
-    // Tambahkan info foto yang ingin dihapus
-    fotoToDelete.forEach(f => formData.append('fotoToDelete[]', f));
-
-    // Tambahkan file foto baru (jika ada)
+    // Kirim foto lama yang masih ada (sudah bersih, hanya nama file)
+    // PATCH: Jangan kirim fotoLama kosong jika user menghapus satu foto
+    let fotoLamaFiltered = Array.from(new Set(fotoArr.filter(Boolean)));
     const fotoInput = document.getElementById('foto');
+    const isFotoChanged = fotoToDelete.length > 0 || (fotoInput && fotoInput.files.length > 0);
+
+    // --- PATCH START ---
+    // Jika user menghapus foto, pastikan fotoLamaFiltered berisi semua foto yang masih ada di preview (fotoArr)
+    // Jangan gunakan window.lastBackendFotoArr jika fotoArr sudah ada isinya
+    if (!isFotoChanged && (!fotoLamaFiltered || fotoLamaFiltered.length === 0)) {
+        if (window.lastBackendFotoArr && Array.isArray(window.lastBackendFotoArr)) {
+            fotoLamaFiltered = window.lastBackendFotoArr.slice();
+        }
+    }
+    // --- PATCH END ---
+
+    formData.append('fotoLama', JSON.stringify(fotoLamaFiltered));
+    // Kirim foto yang ingin dihapus (sudah bersih, hanya nama file)
+    const fotoToDeleteUnique = Array.from(new Set(fotoToDelete));
+    console.log('fotoToDelete to send:', fotoToDeleteUnique);
+    formData.append('fotoToDelete', JSON.stringify(fotoToDeleteUnique));
+
+    // Tambahkan file foto baru
+    const newFiles = [];
     for (let i = 0; i < fotoInput.files.length; i++) {
         formData.append('foto', fotoInput.files[i]);
+        newFiles.push(fotoInput.files[i].name);
     }
 
-    // Format isi_artikel yang benar: sudah dalam format JSON dari updateHiddenTextarea
     formData.append('isi_artikel', hiddenTextarea.value);
 
-    // Submit update (pakai PUT)
     try {
         const res = await fetch(`https://purwadaksina.space/api/artikel/${artikelId}`, {
             method: 'PUT',
             body: formData
         });
         if (!res.ok) throw new Error('Gagal update artikel');
+        
+        const result = await res.json();
+        console.log('Update result:', result);
+
         showNotification('Artikel berhasil diupdate!', 'success');
-        setTimeout(() => window.location.href = 'dashboard.html', 1500);
+
+        // PATCH: Simpan fotoArr backend terakhir ke window agar bisa dipakai jika user tidak edit foto
+        if (result.foto && Array.isArray(result.foto)) {
+            fotoArr = result.foto.map(cleanFotoUrl);
+            window.lastBackendFotoArr = fotoArr.slice();
+            fotoToDelete = [];
+            fotoInput.value = '';
+            renderFotoPreview();
+        }
+        setTimeout(() => {
+            hideLoading();
+            window.location.href = 'dashboard.html';
+        }, 1200);
+
     } catch (error) {
+        hideLoading();
+        console.error('Submit error:', error);
         showNotification('Gagal update artikel: ' + error.message, 'error');
     }
 };
@@ -351,3 +403,36 @@ form.onsubmit = async function(e) {
 // Initialize - Load data saat halaman dibuka
 loadArtikel();
 loadKategori();
+
+// Tambahkan fungsi untuk menampilkan dan menyembunyikan loading
+function showLoading() {
+    let loading = document.getElementById('loading-overlay');
+    if (!loading) {
+        loading = document.createElement('div');
+        loading.id = 'loading-overlay';
+        loading.style.position = 'fixed';
+        loading.style.top = 0;
+        loading.style.left = 0;
+        loading.style.width = '100vw';
+        loading.style.height = '100vh';
+        loading.style.background = 'rgba(255,255,255,0.7)';
+        loading.style.display = 'flex';
+        loading.style.alignItems = 'center';
+        loading.style.justifyContent = 'center';
+        loading.style.zIndex = 9999;
+        loading.innerHTML = `<div style="font-size:2rem;display:flex;flex-direction:column;align-items:center;">
+            <div class="spinner" style="border:6px solid #eee;border-top:6px solid #3498db;border-radius:50%;width:48px;height:48px;animation:spin 1s linear infinite;"></div>
+            <div style="margin-top:12px;">Menyimpan...</div>
+        </div>
+        <style>
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        </style>`;
+        document.body.appendChild(loading);
+    } else {
+        loading.style.display = 'flex';
+    }
+}
+function hideLoading() {
+    const loading = document.getElementById('loading-overlay');
+    if (loading) loading.style.display = 'none';
+}

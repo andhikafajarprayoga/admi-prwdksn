@@ -79,8 +79,7 @@ async function tampilkanArtikel(selector = '#artikel-list', page = 1) {
                             </div>
                         </td>
                         <td>
-                            <div class="action-buttons">
-                                <button class="btn-action btn-view" title="View" data-id="${artikel.id}">👁️</button>
+                            <div class="action-buttons">                        
                                 <button class="btn-action btn-edit" title="Edit" data-id="${artikel.id}">✏️</button>
                                 <button class="btn-action btn-delete" title="Delete" data-id="${artikel.id}">🗑️</button>
                             </div>
