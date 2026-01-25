@@ -60,6 +60,11 @@ function fillFormWithData(artikel) {
         document.getElementById('highlight').value = artikel.highlight !== undefined ? String(artikel.highlight) : '0';
     }
 
+    // Debug data artikel yang diterima
+    console.log('Data artikel:', artikel);
+    console.log('artikel.foto raw:', artikel.foto);
+    console.log('typeof artikel.foto:', typeof artikel.foto);
+
     // Load tags
     if (artikel.tags) {
         tagsArr = artikel.tags.split(',').map(t => t.trim()).filter(t => t);
@@ -72,21 +77,54 @@ function fillFormWithData(artikel) {
         updateHiddenTextarea();
     }
 
-    // Foto lama (array atau string, tergantung backend)
+    // Foto lama - perbaikan parsing untuk 2 kemungkinan format
     fotoArr = [];
-    if (Array.isArray(artikel.foto)) {
-        fotoArr = artikel.foto;
-    } else if (typeof artikel.foto === 'string' && artikel.foto) {
-        fotoArr = [artikel.foto];
+    if (artikel.foto) {
+        if (Array.isArray(artikel.foto)) {
+            fotoArr = artikel.foto;
+            console.log('Foto is array:', fotoArr);
+        } else if (typeof artikel.foto === 'string') {
+            const fotoStr = artikel.foto.trim();
+            console.log('Foto string trimmed:', fotoStr);
+            
+            // Deteksi string yang dimulai dengan [ dan diakhiri dengan ]
+            if (fotoStr.startsWith('[') && fotoStr.endsWith(']')) {
+                try {
+                    const parsed = JSON.parse(fotoStr);
+                    console.log('Parsed JSON:', parsed);
+                    if (Array.isArray(parsed)) {
+                        fotoArr = parsed;
+                        console.log('Successfully parsed as array:', fotoArr);
+                    } else {
+                        fotoArr = [artikel.foto];
+                        console.log('Parsed but not array, using original:', fotoArr);
+                    }
+                } catch (error) {
+                    console.error('JSON parse error:', error);
+                    fotoArr = [artikel.foto];
+                }
+            } else {
+                // String biasa, bukan JSON array
+                if (fotoStr) {
+                    fotoArr = [artikel.foto];
+                    console.log('Plain string, wrapped in array:', fotoArr);
+                }
+            }
+        }
     }
+    
     fotoToDelete = [];
+    
+    console.log('Final fotoArr before renderFotoPreview:', fotoArr);
     renderFotoPreview();
+    
+    console.log('Foto array:', fotoArr); // Debug
 }
 
 // Update hidden textarea dengan JSON
 function updateHiddenTextarea() {
-    const jsonData = convertToJSON(visualEditor);
-    hiddenTextarea.value = JSON.stringify(jsonData);
+    const konten = convertToJSON(visualEditor);
+    hiddenTextarea.value = JSON.stringify({ "konten": konten });
 }
 
 // Setup toolbar buttons
@@ -136,40 +174,89 @@ function renderTags() {
 
 // Render foto preview dan hapus
 function renderFotoPreview() {
+    console.log('renderFotoPreview called with fotoArr:', fotoArr);
+    
     const container = document.getElementById('foto-preview-container');
+    if (!container) {
+        console.error('foto-preview-container element not found!');
+        return;
+    }
+    
+    console.log('Container found:', container);
     container.innerHTML = '';
+    
+    if (fotoArr.length === 0) {
+        container.innerHTML = '<p style="color:#666; font-style:italic; margin:0;">Belum ada foto yang diupload</p>';
+        console.log('No photos to display');
+        return;
+    }
+    
+    console.log(`Rendering ${fotoArr.length} photos`);
+    
     fotoArr.forEach((foto, idx) => {
+        console.log(`Processing photo ${idx}:`, foto);
+        
         const wrapper = document.createElement('div');
         wrapper.className = 'foto-preview-item';
-        wrapper.style.display = 'inline-block';
-        wrapper.style.marginRight = '10px';
-        wrapper.style.position = 'relative';
 
         const img = document.createElement('img');
-        // Cek apakah foto sudah URL absolut atau hanya nama file
-        img.src = (foto.startsWith('http://') || foto.startsWith('https://')) ? foto : `/uploads/${foto}`;
+        
+        // Perbaikan URL gambar untuk 2 kemungkinan format
+        let imageUrl = '';
+        if (typeof foto === 'string') {
+            let cleanFoto = foto.trim();
+
+            // --- PATCH: Remove double domain if exists ---
+            // If contains '/uploads/http', extract after the last '/uploads/'
+            const uploadsDoubleDomain = cleanFoto.match(/\/uploads\/https?:\/\/.+\/uploads\/(.+)/);
+            if (uploadsDoubleDomain) {
+                cleanFoto = uploadsDoubleDomain[1];
+            }
+
+            // If contains two 'http', extract the last one
+            const doubleHttp = cleanFoto.match(/(https?:\/\/[^\s]+)$/);
+            if ((cleanFoto.match(/https?:\/\//g) || []).length > 1 && doubleHttp) {
+                cleanFoto = doubleHttp[1];
+            }
+
+            // Normal URL logic
+            if (cleanFoto.includes('http://') || cleanFoto.includes('https://')) {
+                imageUrl = cleanFoto;
+            } else if (cleanFoto.startsWith('/uploads/')) {
+                imageUrl = `https://purwadaksina.space${cleanFoto}`;
+            } else {
+                imageUrl = `https://purwadaksina.space/uploads/${cleanFoto}`;
+            }
+        } else {
+            imageUrl = 'https://via.placeholder.com/90x90?text=Invalid+Image';
+        }
+        
+        img.src = imageUrl;
         img.alt = 'Foto artikel';
         img.style.maxWidth = '90px';
         img.style.maxHeight = '90px';
         img.style.borderRadius = '6px';
         img.style.border = '1px solid #ddd';
+        img.style.objectFit = 'cover';
+        
+        // Event handlers
+        img.onload = function() {
+            console.log(`Image loaded successfully: ${imageUrl}`);
+        };
+        
+        img.onerror = function() {
+            console.error(`Failed to load image: ${imageUrl}`);
+            this.src = 'https://via.placeholder.com/90x90?text=Error';
+            this.style.opacity = '0.5';
+        };
 
         const delBtn = document.createElement('button');
         delBtn.type = 'button';
         delBtn.textContent = '×';
         delBtn.title = 'Hapus foto ini';
         delBtn.className = 'foto-delete-btn';
-        delBtn.style.position = 'absolute';
-        delBtn.style.top = '2px';
-        delBtn.style.right = '2px';
-        delBtn.style.background = '#e74c3c';
-        delBtn.style.color = '#fff';
-        delBtn.style.border = 'none';
-        delBtn.style.borderRadius = '50%';
-        delBtn.style.width = '22px';
-        delBtn.style.height = '22px';
-        delBtn.style.cursor = 'pointer';
         delBtn.onclick = () => {
+            console.log(`Deleting photo: ${foto}`);
             fotoToDelete.push(foto);
             fotoArr.splice(idx, 1);
             renderFotoPreview();
@@ -178,7 +265,11 @@ function renderFotoPreview() {
         wrapper.appendChild(img);
         wrapper.appendChild(delBtn);
         container.appendChild(wrapper);
+        
+        console.log(`Photo ${idx} rendered successfully`);
     });
+    
+    console.log('All photos rendered');
 }
 
 // Load kategori dari API
@@ -228,6 +319,9 @@ form.onsubmit = async function(e) {
         formData.append('highlight', document.getElementById('highlight').value);
     }
 
+    // Kirim foto lama yang masih ada
+    fotoArr.forEach(f => formData.append('fotoLama[]', f));
+
     // Tambahkan info foto yang ingin dihapus
     fotoToDelete.forEach(f => formData.append('fotoToDelete[]', f));
 
@@ -237,15 +331,10 @@ form.onsubmit = async function(e) {
         formData.append('foto', fotoInput.files[i]);
     }
 
-    // Validasi JSON isi_artikel
-    try {
-        formData.append('isi_artikel', hiddenTextarea.value);
-    } catch {
-        showNotification('Isi artikel harus format JSON yang valid!', 'error');
-        return;
-    }
+    // Format isi_artikel yang benar: sudah dalam format JSON dari updateHiddenTextarea
+    formData.append('isi_artikel', hiddenTextarea.value);
 
-    // Submit update (pakai fetch FormData)
+    // Submit update (pakai PUT)
     try {
         const res = await fetch(`https://purwadaksina.space/api/artikel/${artikelId}`, {
             method: 'PUT',

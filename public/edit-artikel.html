@@ -5,6 +5,44 @@
     <title>Edit Artikel</title>
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="tambah-artikel.css">
+    <style>
+        .foto-preview-item {
+            position: relative;
+            display: inline-block;
+            margin: 5px;
+        }
+        .foto-preview-item img {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+        .foto-delete-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #e74c3c !important;
+            color: white !important;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 20px;
+            text-align: center;
+            z-index: 10;
+        }
+        .foto-delete-btn:hover {
+            background: #c0392b !important;
+        }
+        #foto-preview-container {
+            min-height: 50px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px dashed #ddd;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -79,7 +117,9 @@
                 </div>
                 <div class="form-group">
                     <label for="foto">Foto (upload, bisa lebih dari satu):</label>
-                    <div id="foto-preview-container"></div>
+                    <div id="foto-preview-container">
+                        <!-- Preview foto akan muncul di sini -->
+                    </div>
                     <input type="file" name="foto" id="foto" multiple accept="image/*">
                 </div>
                 <div class="form-group">
