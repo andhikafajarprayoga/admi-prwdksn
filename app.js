@@ -18,8 +18,8 @@ app.use(session({
 
 // Dummy akun
 const dummyUser = {
-    username: 'admin',
-    password: 'password123'
+    username: 'admprwdksina@gmail.com',
+    password: 'admpwdk25'
 };
 
 // Middleware proteksi dashboard
@@ -36,9 +36,11 @@ app.post('/login', (req, res) => {
     if (username === dummyUser.username && password === dummyUser.password) {
         req.session.loggedIn = true;
         req.session.username = username;
-        return res.redirect('/dashboard');
+        // Kirim response JSON sukses, jangan redirect
+        return res.json({ success: true, message: 'Login berhasil!' });
     }
-    res.redirect('/failed.html');
+    // Kirim response JSON gagal
+    res.status(401).json({ success: false, message: 'Username atau password salah!' });
 });
 
 // Dashboard route (proteksi)

@@ -1,17 +1,251 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Login Dummy</title>
-</head>
-<body>
-    <h2>Login Dummy</h2>
-    <form method="POST" action="/login">
-        <label>Username:</label>
-        <input type="text" name="username" required><br><br>
-        <label>Password:</label>
-        <input type="password" name="password" required><br><br>
-        <button type="submit">Login</button>
-    </form>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>CSS3 Login Form</title>
+    <style>
+      /* * * * * General CSS * * * * */
+      *, *::before, *::after { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 16px;
+        font-weight: 400;
+        color: #666666;
+        background: #eaeff4;
+      }
+      .wrapper {
+        margin: 0 auto;
+        width: 100%;
+        max-width: 1140px;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+      .container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        display: flex;
+        background: #ffffff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      }
+      .credit {
+        position: relative;
+        margin: 25px auto 0 auto;
+        width: 100%;
+        text-align: center;
+        color: #666666;
+        font-size: 16px;
+        font-weight: 400;
+      }
+      .credit a {
+        color: #222222;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      /* * * * * Login Form CSS * * * * */
+      h2 {
+        margin: 0 0 15px 0;
+        font-size: 30px;
+        font-weight: 700;
+      }
+      h2 img { width: 120px; }
+      p {
+        margin: 0 0 20px 0;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 22px;
+      }
+      .btn {
+        display: inline-block;
+        padding: 7px 20px;
+        font-size: 16px;
+        letter-spacing: 1px;
+        text-decoration: none;
+        border-radius: 5px;
+        color: #ffffff;
+        outline: none;
+        border: 1px solid #ffffff;
+        transition: 0.3s;
+        -webkit-transition: 0.3s;
+      }
+      .btn:hover {
+        color: #515351;
+        background: #ffffff;
+      }
+      .col-left, .col-right {
+        width: 55%;
+        padding: 45px 35px;
+        display: flex;
+      }
+      .col-left {
+        width: 45%;
+        background: #515351;
+        -webkit-clip-path: polygon(
+          98% 17%, 100% 34%, 98% 51%, 100% 68%, 98% 84%, 100% 100%, 0 100%, 0 0, 100% 0
+        );
+        clip-path: polygon(
+          98% 17%, 100% 34%, 98% 51%, 100% 68%, 98% 84%, 100% 100%, 0 100%, 0 0, 100% 0
+        );
+      }
+      @media (max-width: 575.98px) {
+        .container {
+          flex-direction: column;
+          box-shadow: none;
+        }
+        .col-left, .col-right {
+          width: 100%;
+          margin: 0;
+          padding: 30px;
+          -webkit-clip-path: none;
+          clip-path: none;
+        }
+      }
+      .login-text {
+        position: relative;
+        width: 100%;
+        color: #ffffff;
+        text-align: center;
+      }
+      .login-form {
+        position: relative;
+        width: 100%;
+        color: #666666;
+      }
+      .login-form p:last-child { margin: 0; }
+      .login-form p a {
+        color: #515351;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .login-form p:last-child a:last-child { float: right; }
+      .login-form label {
+        display: block;
+        width: 100%;
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+      }
+      .login-form p:last-child label { width: 60%; float: left; }
+      .login-form label span {
+        color: #ff574e;
+        padding-left: 2px;
+      }
+      .login-form input {
+        display: block;
+        width: 100%;
+        height: 40px;
+        padding: 0 10px;
+        font-size: 16px;
+        letter-spacing: 1px;
+        outline: none;
+        border: 1px solid #cccccc;
+        border-radius: 5px;
+      }
+      .login-form input:focus { border-color: #ff574e; }
+      .login-form input.btn {
+        color: #ffffff;
+        background: #515351;
+        border-color: #515351;
+        outline: none;
+        cursor: pointer;
+      }
+      .login-form input.btn:hover {
+        color: #515351;
+        background: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container">
+        <div class="col-left">
+          <div class="login-text">
+            <h2>Purwadaksina</h2>
+            <p>
+              Halaman login untuk Admin Purwadaksina. Silakan masuk untuk mengelola artikel.
+            </p>
+          </div>
+        </div>
+        <div class="col-right">
+          <div class="login-form">
+            <h2>Login</h2>
+            <form id="loginForm" autocomplete="off">
+              <p>
+                <input type="text" name="username" placeholder="Username" required />
+              </p>
+              <p style="position:relative;">
+                <input type="password" name="password" id="password" placeholder="Password" required />
+                <span id="togglePw" style="position:absolute;right:12px;top:10px;cursor:pointer;font-size:1.1em;color:#888;" title="Tampilkan Password">&#128065;</span>
+              </p>
+              <p>
+                <input class="btn" type="submit" value="Sign In" />
+              </p>
+              <div id="login-alert" style="display:none;margin-top:10px;text-align:center;font-weight:500;"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.getElementById('loginForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const alertBox = document.getElementById('login-alert');
+        alertBox.style.display = 'none';
+        alertBox.textContent = '';
+        alertBox.style.color = '';
+        const form = e.target;
+        const data = {
+          username: form.username.value,
+          password: form.password.value
+        };
+        try {
+          const res = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          const result = await res.json();
+          if (result.success) {
+            alertBox.textContent = result.message;
+            alertBox.style.color = '#22bb33';
+            alertBox.style.display = 'block';
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 900);
+          } else {
+            alertBox.textContent = result.message || 'Login gagal!';
+            alertBox.style.color = '#e74c3c';
+            alertBox.style.display = 'block';
+          }
+        } catch (err) {
+          alertBox.textContent = 'Terjadi kesalahan server!';
+          alertBox.style.color = '#e74c3c';
+          alertBox.style.display = 'block';
+        }
+      };
+
+      // Hide/show password
+      const pwInput = document.getElementById('password');
+      const togglePw = document.getElementById('togglePw');
+      togglePw.onclick = function() {
+        if (pwInput.type === "password") {
+          pwInput.type = "text";
+          togglePw.textContent = "🙈";
+          togglePw.title = "Sembunyikan Password";
+        } else {
+          pwInput.type = "password";
+          togglePw.textContent = "👁️";
+          togglePw.title = "Tampilkan Password";
+        }
+      };
+      // Set initial icon
+      togglePw.textContent = "👁️";
+    </script>
+  </body>
 </html>
